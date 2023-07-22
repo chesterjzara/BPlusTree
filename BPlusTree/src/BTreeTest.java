@@ -22,20 +22,10 @@ public class BTreeTest {
 	public static void testInsertRoot() {
 		
 		BTree tree = new BTree(2);
-		Student stud1 = new Student(1, 12, "CJ", "Math", "SR", 111);
-		Student stud2 = new Student(2, 12, "CJ", "Math", "SR", 222);
-		Student stud3 = new Student(3, 12, "CJ", "Math", "SR", 333);
-		Student stud4 = new Student(4, 12, "CJ", "Math", "SR", 444);
-		Student stud5 = new Student(5, 12, "CJ", "Math", "SR", 555);
-		Student stud6 = new Student(6, 12, "CJ", "Math", "SR", 666);
-		Student stud7 = new Student(7, 12, "CJ", "Math", "SR", 777);
-		tree.insert(stud1);
-		tree.insert(stud2);
-		tree.insert(stud3);
-		tree.insert(stud4);
-		tree.insert(stud5);
-		tree.insert(stud6);
-		tree.insert(stud7);
+		for (int i = 1; i < 11; i++) {
+			Student stud = new Student(i, 12, "CJ", "Math", "SR", i*11);
+			tree.insert(stud);
+		}
 		tree.treeDebugPrint();
 	}
 	

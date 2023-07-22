@@ -166,6 +166,7 @@ class BTree {
     			return;
     			
     		} else {
+    			// No space in node for new split child node
     			// Split N (2d + 1 KV and 2d + 2 children pointers)
     			BTreeNode nodeTwo = new BTreeNode(node.t, false);
     			
@@ -191,7 +192,15 @@ class BTree {
     				root = nodeThree;
     				
     				// Change node.leaf = false
+    				// Set the new node3 children? node, nodeTwo
+    				nodeThree.children[0] = node;
+    				nodeThree.children[1] = nodeTwo;
+    				nodeThree.n = 1;
     				
+    				// Change right node to remove key moved up
+    				nodeTwo.keys[0] = nodeTwo.keys[1];
+    				nodeTwo.keys[1] = 0;
+    				nodeTwo.n = 1;
     				
     			}
 				// Return
