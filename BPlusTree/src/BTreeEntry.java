@@ -20,4 +20,6 @@ public class BTreeEntry {
 		this.value = value;
 		this.node = null;
 	}
+	
+	public BTreeEntry() {}
 }
