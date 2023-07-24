@@ -27,6 +27,7 @@ public class BTreeTest {
 			tree.insert(stud);
 		}
 		tree.treeDebugPrint();
+		tree.print();
 	}
 	
 	public static void testArrayInsert() {
@@ -50,7 +51,7 @@ public class BTreeTest {
 			System.out.println(test.keys[i] + "-" + test.values[i]);
 		}
 		
-		tree.arrayInsert(test, entry);
+		tree.arrayLeafInsert(test, entry);
 		
 		System.out.println("After");
 		for (int i = 0; i < test.keys.length; i++) {

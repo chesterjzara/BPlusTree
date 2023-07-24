@@ -67,34 +67,27 @@ class BTree {
          * Implement this function to insert in the B+Tree.
          * Also, insert in student.csv after inserting in B+Tree.
          */
-//    	long studentId = student.studentId;
-//    	long recordId = student.recordId;
-//    	BTreeNode newNode = new BTreeNode(this.t, true);
-//    	newNode.n = 1;
-//    	newNode.keys[0] = studentId;
-//    	newNode.values[0] = recordId;
-//    	this.root = newNode;
-//    	BTreeEntry testEntry = new BTreeEntry(10, 10);
-//    	BTreeEntry testNew = new BTreeEntry(10, 10);
-//    	this.treeInsert(newNode, testEntry, testNew);
     	
+    	// If there is no root node, create one
     	if (this.root == null) {
     		this.root = new BTreeNode(this.t, true);
     	}
     	
+    	// Get the student id and record id and insert recursively
     	long studentId = student.studentId;
     	long recordId = student.recordId;
-    	BTreeEntry testEntry = new BTreeEntry(student.studentId, student.recordId);
-    	BTreeEntry testNew = new BTreeEntry();
+    	BTreeEntry studentEntry = new BTreeEntry(student.studentId, student.recordId);
+    	BTreeEntry newEntry = new BTreeEntry();
     	
-    	this.treeInsert(this.root, testEntry, testNew);
+    	this.treeInsert(this.root, studentEntry, newEntry);
  
         return this;
     }
     
     void treeInsert(BTreeNode node, BTreeEntry entry, BTreeEntry newEntry) {
+    	// Non-Leaf Case
     	if (!node.leaf) {
-    		// Find which child to recursively call + insert
+    		// Find which child node to recursively call for the insert
     		int childTarget = -1;
     		for (int i = 0; i < node.keys.length; i++) {
     			if (entry.key < node.keys[i]) {
@@ -106,25 +99,23 @@ class BTree {
     				break;
     			}
     		}
+    		// If there is no key > than the new value add to the last (largest) child
     		if (childTarget == -1) {
     			childTarget = node.children.length - 1;
     		}
     		
     		// Insert recursively into correct child node
-    		BTreeEntry test = new BTreeEntry();
-    		newEntry = test;
+//    		BTreeEntry test = new BTreeEntry();
+//    		newEntry = test;
     		treeInsert(node.children[childTarget], entry, newEntry);
     		
-    		// if newEntry is null - return, no child split
-    		if (newEntry == null) {
-    			// TODO - this might need to check newEntry.node instead??
-    			return;
-    		}
-    		if (newEntry.key == 0) { return; }
+    		// If no child split - newEntry is null and return 
+    		if (newEntry == null) return;
+    		if (newEntry.key == 0) return;
     		
-    		// else - handle child split...
+    		// Else - handle child split
     		
-    		// IF N has space - add pointer from newChild to this node
+    		// If N has space - add pointer from newChild to this node
     		if (node.n < node.keys.length) {
     			// Insert key in order
     			int keyInsPos = findInsertPosition(node, newEntry);
@@ -201,30 +192,29 @@ class BTree {
     				nodeTwo.keys[0] = nodeTwo.keys[1];
     				nodeTwo.keys[1] = 0;
     				nodeTwo.n = 1;
-    				
     			}
-				// Return
     			return;
     		}    		
     	}
     	
-    	// Node is a leaf
+    	// Node is a leaf case
+    	
     	// Check if there is space for key-value
     	if (node.n < node.keys.length) {
     		// Add entry (key-val) to leaf node in key order
-    		arrayInsert(node, entry);
+    		arrayLeafInsert(node, entry);
     		node.n += 1;
     		newEntry = null;
     		return;
     	}  
     	else {
     		Helpers.p("No space in leaf");
+    		
     		// No space in leaf for key-value - split leaf
     		BTreeNode leafTwo = new BTreeNode(node.t, true);
     		
     		// First D entries in old leaf, rest move to new leaf
     		splitInsertLeaf(node, leafTwo, entry);
-//    		newEntry = new BTreeEntry(leafTwo.keys[0], leafTwo.values[0], leafTwo);
     		newEntry.key = leafTwo.keys[0];
 			newEntry.value = leafTwo.values[0];
 			newEntry.node = leafTwo;
@@ -240,7 +230,6 @@ class BTree {
     			
     			this.root = newRoot;
     		}
-    		
     		return;
     	}
     }
@@ -302,7 +291,6 @@ class BTree {
     			nodeTwo.children[i - (degree + 1)] = tempChildren[i];
     		}
     	}
-    	
     }
     
     void splitInsertLeaf(BTreeNode leafOne, BTreeNode leafTwo, BTreeEntry entry) {
@@ -367,18 +355,7 @@ class BTree {
     }
     
     
-    void arrayInsert(BTreeNode node, BTreeEntry entry) {
-//    	int insertPos = -1;
-//    	// Find insert position
-//    	for (int i = 0; i < node.n; i++) {
-//    		if (entry.key < node.keys[i]) {
-//    			insertPos = i;
-//    			break;
-//    		}
-//    	}
-//    	if (insertPos == -1) {
-//    		insertPos = node.n;
-//    	}
+    void arrayLeafInsert(BTreeNode node, BTreeEntry entry) {
     	int insertPos = findInsertPosition(node, entry);
     	
     	// Create new arrays and insert old + new value
@@ -426,7 +403,22 @@ class BTree {
          * Return a list of recordIDs from left to right of leaf nodes.
          *
          */
+        Helpers.p("Printing keys in order: ");
+        recursivePrint(root,listOfRecordID);
         return listOfRecordID;
+    }
+    
+    void recursivePrint(BTreeNode node, List<Long> listOfRecordID) {
+    	if (node == null) return;
+    	
+    	for (int i = 0; i < node.children.length; i++) {
+    		recursivePrint(node.children[i], listOfRecordID);
+    		
+    		if (i < node.n && node.leaf) {
+    			Helpers.p(node.keys[i] + " ");
+    			listOfRecordID.add(node.values[i]);
+    		}
+    	}
     }
     
     void treeDebugPrint() {
@@ -435,7 +427,7 @@ class BTree {
     	
     	int level = 0;
     	
-    	recursivePrint(outTree, root, level);
+    	recursiveDebugPrint(outTree, root, level);
     	
     	for (int i = 0; i < outTree.size(); i++) {
     		ArrayList<BTreeNode> nodeList = outTree.get(i);
@@ -447,7 +439,7 @@ class BTree {
     	
     }
     
-    void recursivePrint(ArrayList<ArrayList<BTreeNode>> outTree, BTreeNode node, int level) {
+    void recursiveDebugPrint(ArrayList<ArrayList<BTreeNode>> outTree, BTreeNode node, int level) {
     	if (node == null)  return;
     	
     	if (outTree.size() <= level ) {
@@ -460,7 +452,7 @@ class BTree {
     	
     	if (node.leaf) return;
     	for (int i = 0; i < node.children.length; i++) {
-    		recursivePrint(outTree, node.children[i], level + 1);
+    		recursiveDebugPrint(outTree, node.children[i], level + 1);
     	}
     	
     	
