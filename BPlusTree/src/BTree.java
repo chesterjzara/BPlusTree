@@ -431,29 +431,39 @@ class BTree {
     
     void treeDebugPrint() {
     	
-    	//root.nodeDebugPrint();
-    	int indent = 0;
+    	ArrayList<ArrayList<BTreeNode>>	outTree = new ArrayList<ArrayList<BTreeNode>>();
     	
-    	root.nodeDebugPrint();
-    	for (int i = 0; i < root.children.length; i++) {
-    		indent += recursivePrint(root.children[i], indent);
-    	}
-    	for (int i = 0; i < indent; i++) {
-    		System.out.print("   ");
+    	int level = 0;
+    	
+    	recursivePrint(outTree, root, level);
+    	
+    	for (int i = 0; i < outTree.size(); i++) {
+    		ArrayList<BTreeNode> nodeList = outTree.get(i);
+    		for (BTreeNode bTreeNode : nodeList) {
+				bTreeNode.nodeDebugPrint();
+			}
+    		System.out.println();
     	}
     	
     }
     
-    int recursivePrint(BTreeNode node, int indent) {
-    	if (node == null)  return indent;
+    void recursivePrint(ArrayList<ArrayList<BTreeNode>> outTree, BTreeNode node, int level) {
+    	if (node == null)  return;
     	
-    	node.nodeDebugPrint();
+    	if (outTree.size() <= level ) {
+    		ArrayList<BTreeNode> newList = new ArrayList<BTreeNode>();
+    		newList.add(node);
+    		outTree.add(level, newList);
+    	} else {
+    		outTree.get(level).add(node);
+    	}
+    	
+    	if (node.leaf) return;
     	for (int i = 0; i < node.children.length; i++) {
-    		indent += recursivePrint(node.children[i], indent);
+    		recursivePrint(outTree, node.children[i], level + 1);
     	}
     	
     	
-    	return indent;
     }
     
 }
