@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -202,7 +203,7 @@ class BTree {
     	// Check if there is space for key-value
     	if (node.n < node.keys.length) {
     		// Add entry (key-val) to leaf node in key order
-    		arrayLeafInsert(node, entry);
+    		arrayInsertLeaf(node, entry);
     		node.n += 1;
     		newEntry = null;
     		return;
@@ -354,34 +355,42 @@ class BTree {
     	return insertPos;
     }
     
-    
-    void arrayLeafInsert(BTreeNode node, BTreeEntry entry) {
-    	int insertPos = findInsertPosition(node, entry);
+    void arrayInsertLeaf(BTreeNode node, BTreeEntry entry) {
+    	int insIdx = findInsertPosition(node, entry);
     	
     	// Create new arrays and insert old + new value
     	long[] newKeys = new long[node.keys.length];
     	long[] newValues = new long[node.values.length];
     	
-    	for (int j = 0; j < newKeys.length; j++) {
-    		if (j < insertPos) {
-    			newKeys[j] = node.keys[j];
-    			newValues[j] = node.values[j];
-    		}
-    		if (j == insertPos) {
-    			newKeys[j] = entry.key;
-    			newValues[j] = entry.value;
-    		}
-    		if (j > insertPos) {
-    			newKeys[j] = node.keys[j-1];
-    			newValues[j] = node.values[j-1];
-    		}
-    	}
+    	// Copy keys without deleted key
+    	System.arraycopy(node.keys, 0, newKeys, 0, insIdx);
+    	newKeys[insIdx] = entry.key;
+    	System.arraycopy(node.keys, insIdx, newKeys, insIdx + 1, node.keys.length - insIdx - 1);
+    	
+    	// Copy values without deleted key
+    	System.arraycopy(node.values, 0, newValues, 0, insIdx);
+    	newValues[insIdx] = entry.value;
+    	System.arraycopy(node.values, insIdx, newValues, insIdx + 1, node.values.length - insIdx - 1);
+    	
+//    	for (int j = 0; j < newKeys.length; j++) {
+//    		if (j < insertPos) {
+//    			newKeys[j] = node.keys[j];
+//    			newValues[j] = node.values[j];
+//    		}
+//    		if (j == insertPos) {
+//    			newKeys[j] = entry.key;
+//    			newValues[j] = entry.value;
+//    		}
+//    		if (j > insertPos) {
+//    			newKeys[j] = node.keys[j-1];
+//    			newValues[j] = node.values[j-1];
+//    		}
+//    	}
     	
     	// Replace the old arrays on the node with new sorted
     	node.keys = newKeys;
     	node.values = newValues;
     }
-    
     
     boolean delete(long studentId) {
         /**
@@ -390,7 +399,222 @@ class BTree {
          * Also, delete in student.csv after deleting in B+Tree, if it exists.
          * Return true if the student is deleted successfully otherwise, return false.
          */
-        return true;
+    	
+    	BTreeEntry studentEntry = new BTreeEntry();
+    	studentEntry.key = studentId;
+    	BTreeEntry oldChildEntry = new BTreeEntry();
+    	
+    	treeDelete(null, root, studentEntry, oldChildEntry);
+    	
+    	return true;
+    }
+    
+    void treeDelete(BTreeNode parent, BTreeNode node, BTreeEntry entry,
+    		BTreeEntry oldChildEntry) {
+    	int minKeys = node.keys.length / 2;
+    	// If node is non-leaf node
+    		// Choose correct subtree based on key 
+    		// Recursive delete on sub-tree node
+    		// If - No child deletion - return null;
+    		// Else
+    			// Remove oldChildEntry from node
+    			// If node has entries to spare
+    				// Set oldChildEntry to null and return
+    			// Else - merge node to sibling
+    				// Get sibling S of node N (via parentNode)
+    					// Check for preceding or succeeding sibling?
+    				// If S has extra entries
+    					// redistribute evenly to N and S - through parent
+    					// 	Set oldChildEntry to null and return
+    				// Else - no extra entries = merge N and S
+    					// oldChildEntry = current entry in parent for M/N
+    					// "pull" splitting key from parent into left node
+    					// move all entries form M/N to node on left
+    					// discard empty node M/N, return
+    				
+    	
+    	// If node is a leaf node
+    	if (node.leaf) {
+    		// If - L has entries to spare - (keys.length / 2 = too few)
+    		if (node.n - 1 > minKeys) {
+    			// Remove entry, set oldChildEntry to null and return
+    			arrayLeafDelete(node, entry);
+    			node.n -= 1;
+    			oldChildEntry = null;
+    		} else {
+    		// Else - No entries to spare
+    			// Get all sibling S of L (via parentNode)
+    			BTreeNode rightSib = findRightSibling(parent, node);
+    			BTreeNode leftSib = findLeftSibling(parent, node);
+    			
+    			// If - S has extra entries
+	    			// Remove key to delete
+    				// Redistribute evenly between S and L
+	    			// Find entry in parent for node on right (S or L - now called M)
+	    			// Replace key value in parent entry for new low-key in M
+	    			
+    			if (rightSib.n - 1 > minKeys) {
+    				// Remove the key to delete
+    				arrayLeafDelete(node, entry);
+        			node.n -= 1;
+        			
+        			// Redistribute the keys-values between node and right sibling
+    				redistLeaves(node, rightSib, true);
+    				
+    				// Replace key in parent node w/ low-key in right node
+    				int parentKeyIdx = findParentKeyForNode(parent, rightSib);
+    				parent.keys[parentKeyIdx] = rightSib.keys[0];
+    				
+    				// Set oldChildEntry to null and return
+    				oldChildEntry = null;
+    				
+    			} else if (leftSib.n - 1 > minKeys) {
+    				// Remove the key to delete
+    				arrayLeafDelete(node, entry);
+        			node.n -= 1;
+        			
+        			// Redistribute the keys-values between node and right sibling
+    				redistLeaves(node, leftSib, false);
+    				
+    				// Replace key in parent node w/ low-key in right node
+    				int parentKeyIdx = findParentKeyForNode(parent, node);
+    				parent.keys[parentKeyIdx] = node.keys[0];
+    				
+    				// Set oldChildEntry to null and return
+    				oldChildEntry = null;
+    				
+    			} else {
+    				// Else - merge L and S
+    				
+    			}
+					// oldChildEntry = current entry in Parent for M
+    				// move all entries from M to node on left
+					// Discard empty M node
+						// Adjust sibling pointers, return		
+    		}
+    	}
+    }
+    
+    int findParentKeyForNode(BTreeNode parent, BTreeNode node) {
+    	int idx = -1;
+    	for (int i = 0; i < parent.keys.length + 1; i++) {
+    		if (parent.children[i] == node) {
+    			return i;
+    		}
+    	}
+    	return idx;
+    }
+    
+    void redistLeaves(BTreeNode node, BTreeNode sibNode, boolean right) {
+    	// Create new temp arrays for combined keys and values before redist
+    	int totalKeys = node.n + sibNode.n;
+    	long[] tempKeys = new long[totalKeys];
+    	long[] tempValues = new long[totalKeys];
+    	
+    	// Determine which node is left and right
+    	BTreeNode leftNode;
+		BTreeNode rightNode;
+		if (right) {
+    		leftNode = node;
+    		rightNode = sibNode;
+    	} else {
+    		leftNode = sibNode;
+    		rightNode = node;
+    	}
+    	
+		// Copy all keys and values into combined temp arrays
+		System.arraycopy(leftNode.keys, 0, tempKeys, 0, leftNode.n);
+		System.arraycopy(rightNode.keys, 0, tempKeys, leftNode.n, rightNode.n);
+		System.arraycopy(leftNode.values, 0, tempValues, 0, leftNode.n);
+		System.arraycopy(rightNode.values, 0, tempValues, leftNode.n, rightNode.n);
+		
+		long[] newLeftKeys = new long[leftNode.keys.length];
+		long[] newLeftValues = new long[leftNode.values.length];
+		long[] newRightKeys = new long[rightNode.keys.length];
+		long[] newRightValues = new long[rightNode.values.length];
+		int sibCnt = 0;
+		leftNode.n = 0;
+		rightNode.n = 0;
+		
+		// Redistribute the keys and values into each node - left and right
+		for (int i = 0; i < totalKeys; i++) {
+			if (i < totalKeys / 2) {
+				newLeftKeys[i] = tempKeys[i];
+				newLeftValues[i] = tempValues[i];
+				leftNode.n += 1;
+			} else {
+				newRightKeys[sibCnt] = tempKeys[i];
+				newRightValues[sibCnt] = tempValues[i];
+				rightNode.n += 1;
+			}
+		}
+		
+		// Save the new keys + value arrays back to the left and right nodes
+		leftNode.keys = newLeftKeys;
+		leftNode.values = newLeftValues;
+		rightNode.keys = newRightKeys;
+		rightNode.values = newRightValues;
+    }
+
+    BTreeNode findRightSibling(BTreeNode parent, BTreeNode node) {
+    	if (parent == null) return null;
+    	
+    	// Find the index of node within parent's children
+    	int idx = -1;
+    	for (int i = 0; i < parent.keys.length + 1; i++) {
+    		if (parent.children[i] == node) {
+    			idx = i;
+    			break;
+    		}
+    	}
+    	
+    	// Find the next largest child on parent 
+    	if (idx < parent.keys.length) {
+    		return parent.children[idx + 1];
+    	}
+    	// (unless this is the rightmost)
+    	return null;
+    }
+    
+    BTreeNode findLeftSibling(BTreeNode parent, BTreeNode node) {
+    	if (parent == null) return null;
+    	
+    	// Find the index of node with parent's children
+    	int idx = -1;
+    	for (int i = 0; i < parent.keys.length + 1; i++) {
+    		if (parent.children[i] == node) {
+    			idx = i;
+    			break;
+    		}
+    	}
+    	
+    	// Find the next largest child on parent 
+    	if (idx < parent.keys.length) {
+    		return parent.children[idx + 1];
+    	}
+    	// (unless this is the rightmost)
+    	return null;
+    }
+    
+    void arrayLeafDelete(BTreeNode node, BTreeEntry entry) {
+    	// Find Delete Index
+    	int delIdx = Arrays.binarySearch(node.keys, entry.key);
+    	
+    	// Create new arrays and remove the old key + value
+    	long[] newKeys = new long[node.keys.length];
+    	long[] newValues = new long[node.values.length];
+    	
+    	// Copy keys without deleted key
+    	System.arraycopy(node.keys, 0, newKeys, 0, delIdx);
+    	System.arraycopy(node.keys, delIdx + 1, newKeys, delIdx, node.keys.length - delIdx - 1);
+    	
+    	// Copy values without deleted value
+    	System.arraycopy(node.values, 0, newValues, 0, delIdx);
+    	System.arraycopy(node.values, delIdx + 1, newValues, delIdx, node.values.length - delIdx - 1);
+    	
+    	// Replace the old arrays on the node with new arrays
+    	node.keys = newKeys;
+    	node.values = newValues;
     }
 
     List<Long> print() {
@@ -408,6 +632,7 @@ class BTree {
         return listOfRecordID;
     }
     
+    
     void recursivePrint(BTreeNode node, List<Long> listOfRecordID) {
     	if (node == null) return;
     	
@@ -420,6 +645,7 @@ class BTree {
     		}
     	}
     }
+    
     
     void treeDebugPrint() {
     	
@@ -436,9 +662,7 @@ class BTree {
 			}
     		System.out.println();
     	}
-    	
-    }
-    
+    }    
     void recursiveDebugPrint(ArrayList<ArrayList<BTreeNode>> outTree, BTreeNode node, int level) {
     	if (node == null)  return;
     	
@@ -457,5 +681,5 @@ class BTree {
     	
     	
     }
-    
+
 }

@@ -46,6 +46,7 @@ class BTreeNode {
     	System.out.print("[");
     	for (int i = 0; i < keys.length; i++) {
     		System.out.print("(" + keys[i] +"," + values[i] + ")");
+//    		System.out.print("(" + keys[i] +"," + values[i] +"," + this.next.keys + ")");
     	}
     	System.out.print("] ");
     }
