@@ -20,7 +20,9 @@ public class BTreeTest {
 		
 //		testLeafDelete();
 		
-		testDelete();
+//		testDelete();
+		
+		testRemoveParentKeyAndChild();
 	}
 	
 	public static void testInsertRoot() {
@@ -103,5 +105,39 @@ public class BTreeTest {
 		tree.insert(new Student(10, 12, "cj", "CS", "SR", 110));
 		tree.delete(1);
 		tree.treeDebugPrint();
+	}
+	
+	public static void testRemoveParentKeyAndChild() {
+		BTree tree = new BTree(2);
+		tree.insert(new Student(22, 12, "cj", "CS", "SR", 110));
+		tree.treeDebugPrint();
+		tree.insert(new Student(24, 12, "cj", "CS", "SR", 110));
+		tree.treeDebugPrint();
+		tree.insert(new Student(27, 12, "cj", "CS", "SR", 110));
+		tree.treeDebugPrint();
+		tree.insert(new Student(29, 12, "cj", "CS", "SR", 110));
+		tree.treeDebugPrint();
+		tree.insert(new Student(25, 12, "cj", "CS", "SR", 110));
+		tree.treeDebugPrint();
+		tree.delete(24);
+		tree.treeDebugPrint();
+		tree.insert(new Student(30, 12, "cj", "CS", "SR", 110));
+		tree.treeDebugPrint();
+		tree.insert(new Student(26, 12, "cj", "CS", "SR", 110));
+		tree.treeDebugPrint();
+		tree.delete(30);
+		tree.treeDebugPrint();
+//		tree.insert(new Student(32, 12, "cj", "CS", "SR", 110));
+//		tree.treeDebugPrint();
+//		tree.insert(new Student(34, 12, "cj", "CS", "SR", 110));
+//		tree.treeDebugPrint();
+//		tree.insert(new Student(40, 12, "cj", "CS", "SR", 110));
+//		tree.treeDebugPrint();
+//		tree.insert(new Student(50, 12, "cj", "CS", "SR", 110));
+//		tree.treeDebugPrint();
+//		tree.insert(new Student(60, 12, "cj", "CS", "SR", 110));
+//		tree.treeDebugPrint();
+//		tree.insert(new Student(70, 12, "cj", "CS", "SR", 110));
+//		tree.treeDebugPrint();
 	}
 }

@@ -95,14 +95,15 @@ class BTree {
     				childTarget = i;
     				break;
     			}
-    			if (node.keys[i] == 0) {
-    				childTarget = i;
-    				break;
-    			}
+//    			if (node.keys[i] == 0) {
+//    				childTarget = i;
+//    				break;
+//    			}
     		}
     		// If there is no key > than the new value add to the last (largest) child
     		if (childTarget == -1) {
-    			childTarget = node.children.length - 1;
+//    			childTarget = node.children.length - 1;
+    			childTarget = node.n;
     		}
     		
     		// Insert recursively into correct child node
@@ -318,8 +319,8 @@ class BTree {
     	}
     	
     	// Save subsets of each key/value array back to each leaf
-    	leafOne.keys = new long[2 * degree - 1 ];
-    	leafOne.values = new long[2 * degree - 1 ];
+    	leafOne.keys = new long[leafOne.keys.length];
+    	leafOne.values = new long[leafOne.values.length];
     	leafOne.n = 0;
 
 //    	//Don't need
@@ -413,25 +414,67 @@ class BTree {
     		BTreeEntry oldChildEntry) {
     	int minKeys = node.keys.length / 2;
     	// If node is non-leaf node
-    		// Choose correct subtree based on key 
+    	if (!node.leaf) {
+    		// Choose correct subtree based on key
+    		int childTarget = -1;
+    		for (int i = 0; i < node.keys.length; i++) {
+    			if (entry.key < node.keys[i]) {
+    				childTarget = i;
+    				break;
+    			}
+    			if (node.keys[i] == 0) {
+    				childTarget = i;
+    				break;
+    			}
+    		}
     		// Recursive delete on sub-tree node
+    		treeDelete(node, node.children[childTarget], entry, oldChildEntry);
     		// If - No child deletion - return null;
-    		// Else
-    			// Remove oldChildEntry from node
+    		if (oldChildEntry == null || oldChildEntry.node == null) {
+    			return;
+    		} else {
+    			// Else - a child node was discarded
+    			// Remove oldChildEntry from this node's children + key arrays
+    			BTreeNode removedNode = oldChildEntry.node;
+    			int parentKeyIdx = findParentKeyForNode(node, removedNode);
+    			removeParentKeyAndChild(node, parentKeyIdx);
+    			
     			// If node has entries to spare
+    			if (node.n > minKeys) {
     				// Set oldChildEntry to null and return
-    			// Else - merge node to sibling
-    				// Get sibling S of node N (via parentNode)
-    					// Check for preceding or succeeding sibling?
-    				// If S has extra entries
-    					// redistribute evenly to N and S - through parent
-    					// 	Set oldChildEntry to null and return
-    				// Else - no extra entries = merge N and S
-    					// oldChildEntry = current entry in parent for M/N
-    					// "pull" splitting key from parent into left node
-    					// move all entries form M/N to node on left
-    					// discard empty node M/N, return
+    				oldChildEntry = null;
+    				return;
     				
+    			} else {
+    				// Else - merge node to sibling
+    				// Get sibling S of node N (via parentNode) - left and right
+    				BTreeNode rightSib = findRightSibling(parent, node);
+        			BTreeNode leftSib = findLeftSibling(parent, node);
+        			
+        			// If S has extra entries
+        			if (rightSib != null && rightSib.n - 1 > minKeys) { 
+        				// Redistribute evenly to N and S - through parent
+        				redistNodes(node, rightSib);
+        				
+        				// Set oldChildEntry to null and return
+        				oldChildEntry = null;
+        				return;
+        			} else if (leftSib != null && leftSib.n - 1 > minKeys) {
+        				// Redistribute evenly to N and S - through parent
+        				redistNodes(leftSib, node);
+        				// Set oldChildEntry to null and return
+        				oldChildEntry = null;
+        				return;
+        			} else {
+        				// Else - no extra entries = merge N and S
+        				// oldChildEntry = current entry in parent for M (RHS node)
+        				// "pull" splitting key from parent into left node
+        				// move all entries form M/N to node on left
+        				// discard empty node M/N, return        				
+        			}
+    			}			
+    		}
+    	}		
     	
     	// If node is a leaf node
     	if (node.leaf) {
@@ -453,7 +496,7 @@ class BTree {
 	    			// Find entry in parent for node on right (S or L - now called M)
 	    			// Replace key value in parent entry for new low-key in M
 	    			
-    			if (rightSib.n - 1 > minKeys) {
+    			if (rightSib != null && rightSib.n - 1 > minKeys) {
     				// Remove the key to delete
     				arrayLeafDelete(node, entry);
         			node.n -= 1;
@@ -463,12 +506,12 @@ class BTree {
     				
     				// Replace key in parent node w/ low-key in right node
     				int parentKeyIdx = findParentKeyForNode(parent, rightSib);
-    				parent.keys[parentKeyIdx] = rightSib.keys[0];
+    				parent.keys[parentKeyIdx - 1] = rightSib.keys[0];
     				
     				// Set oldChildEntry to null and return
     				oldChildEntry = null;
     				
-    			} else if (leftSib.n - 1 > minKeys) {
+    			} else if (leftSib != null && leftSib.n - 1 > minKeys) {
     				// Remove the key to delete
     				arrayLeafDelete(node, entry);
         			node.n -= 1;
@@ -478,21 +521,86 @@ class BTree {
     				
     				// Replace key in parent node w/ low-key in right node
     				int parentKeyIdx = findParentKeyForNode(parent, node);
-    				parent.keys[parentKeyIdx] = node.keys[0];
+    				parent.keys[parentKeyIdx - 1] = node.keys[0];
     				
     				// Set oldChildEntry to null and return
     				oldChildEntry = null;
     				
     			} else {
-    				// Else - merge L and S
+    				arrayLeafDelete(node, entry);
+    				node.n -= 1;
+    				// Else - merge L and S (try right, then left)
+    				BTreeNode mergeNode;
+    				BTreeNode targetNode;
+    				if (rightSib != null) {
+    					mergeNode = rightSib;
+    					targetNode = node;
+    				} else  {
+    					mergeNode = node;
+    					targetNode = leftSib;
+    				}
+    				// oldChildEntry = current entry in Parent for M
+    				oldChildEntry.node = mergeNode;
+    				// Do we need key/value here in oldChildEntry??
     				
-    			}
-					// oldChildEntry = current entry in Parent for M
     				// move all entries from M to node on left
-					// Discard empty M node
-						// Adjust sibling pointers, return		
+    				mergeKeysToLeftNode(targetNode, mergeNode);
+    				// Discard empty M node
+    				// Remove from parent - "pull down" the key related to the merged away node
+    				// Need to "shift" over remaining keys and child pointers too 
+    				//int parentKeyIdx = findParentKeyForNode(parent, mergeNode);
+    				//removeParentKeyAndChild(parent, parentKeyIdx);
+    				// Adjust sibling pointers, return	
+    				BTreeNode newRightSib = findRightSibling(parent, targetNode);
+    				targetNode.next = newRightSib;
+    				return;
+    			}
     		}
     	}
+    }
+    
+    void redistNodes(BTreeNode left, BTreeNode right) {
+    	int totalKeys = left.n + right.n;
+    	int totalChildren = totalKeys + 2;
+    	long[] tempKeys = new long[totalKeys];
+    	long[] tempChildren = new long[totalChildren];
+    	
+    	// Copy keys/children into temp arrays
+    	
+    }
+    
+    void removeParentKeyAndChild(BTreeNode parent, int removeIdx) {
+    	long[] tempKeys = new long[parent.keys.length];
+    	BTreeNode[] tempChildren = new BTreeNode[parent.children.length];
+    	
+    	int keyRemove = removeIdx - 1;
+    	System.arraycopy(parent.keys, 0, tempKeys, 0, keyRemove);
+		System.arraycopy(parent.keys, keyRemove + 1, tempKeys, keyRemove, 
+				parent.keys.length - keyRemove - 1);
+
+		System.arraycopy(parent.children, 0, tempChildren, 0, removeIdx);
+		System.arraycopy(parent.children, removeIdx + 1, tempChildren, removeIdx, 
+				parent.children.length - removeIdx - 1);
+		
+		parent.keys = tempKeys;
+		parent.children = tempChildren;
+		parent.n -= 1;
+    }
+    
+    void mergeKeysToLeftNode(BTreeNode targetNode, BTreeNode mergeNode) {
+    	// Create new temp arrays for combined keys and values 
+    	long[] tempKeys = new long[targetNode.keys.length];
+    	long[] tempValues = new long[targetNode.values.length];
+    	
+    	// Copy all keys and values into combined temp arrays
+		System.arraycopy(targetNode.keys, 0, tempKeys, 0, targetNode.n);
+		System.arraycopy(mergeNode.keys, 0, tempKeys, targetNode.n, mergeNode.n);
+		System.arraycopy(targetNode.values, 0, tempValues, 0, targetNode.n);
+		System.arraycopy(mergeNode.values, 0, tempValues, targetNode.n, mergeNode.n);
+    	
+		targetNode.n = targetNode.n + mergeNode.n;
+		targetNode.keys = tempKeys;
+		targetNode.values = tempValues;
     }
     
     int findParentKeyForNode(BTreeNode parent, BTreeNode node) {
@@ -546,6 +654,7 @@ class BTree {
 				newRightKeys[sibCnt] = tempKeys[i];
 				newRightValues[sibCnt] = tempValues[i];
 				rightNode.n += 1;
+				sibCnt += 1;
 			}
 		}
 		
@@ -589,8 +698,8 @@ class BTree {
     	}
     	
     	// Find the next largest child on parent 
-    	if (idx < parent.keys.length) {
-    		return parent.children[idx + 1];
+    	if (idx > 0) {
+    		return parent.children[idx - 1];
     	}
     	// (unless this is the rightmost)
     	return null;
