@@ -127,17 +127,35 @@ public class BTreeTest {
 		tree.treeDebugPrint();
 		tree.delete(30);
 		tree.treeDebugPrint();
-//		tree.insert(new Student(32, 12, "cj", "CS", "SR", 110));
-//		tree.treeDebugPrint();
-//		tree.insert(new Student(34, 12, "cj", "CS", "SR", 110));
-//		tree.treeDebugPrint();
-//		tree.insert(new Student(40, 12, "cj", "CS", "SR", 110));
-//		tree.treeDebugPrint();
-//		tree.insert(new Student(50, 12, "cj", "CS", "SR", 110));
-//		tree.treeDebugPrint();
-//		tree.insert(new Student(60, 12, "cj", "CS", "SR", 110));
-//		tree.treeDebugPrint();
-//		tree.insert(new Student(70, 12, "cj", "CS", "SR", 110));
-//		tree.treeDebugPrint();
+		tree.delete(27);
+		tree.treeDebugPrint();
+		tree.insert(new Student(32, 12, "cj", "CS", "SR", 110));
+		tree.treeDebugPrint();
+		tree.insert(new Student(34, 12, "cj", "CS", "SR", 110));
+		tree.treeDebugPrint();
+		tree.insert(new Student(40, 12, "cj", "CS", "SR", 110));
+		tree.treeDebugPrint();
+		tree.insert(new Student(50, 12, "cj", "CS", "SR", 110));
+		tree.treeDebugPrint();
+		tree.insert(new Student(60, 12, "cj", "CS", "SR", 110));
+		tree.treeDebugPrint();
+		tree.insert(new Student(70, 12, "cj", "CS", "SR", 110));
+		tree.treeDebugPrint();
+		tree.insert(new Student(55, 12, "cj", "CS", "SR", 110));
+		tree.treeDebugPrint();
+		tree.insert(new Student(54, 12, "cj", "CS", "SR", 110));
+		tree.treeDebugPrint();
+		tree.insert(new Student(56, 12, "cj", "CS", "SR", 110));
+		tree.treeDebugPrint();
+		tree.insert(new Student(57, 12, "cj", "CS", "SR", 110));
+		tree.treeDebugPrint();
+		tree.insert(new Student(65, 12, "cj", "CS", "SR", 110));
+		tree.treeDebugPrint();
+		tree.insert(new Student(80, 12, "cj", "CS", "SR", 110));
+		tree.treeDebugPrint();
+		tree.delete(22);
+		tree.treeDebugPrint();
+		
+
 	}
 }
