@@ -21,4 +21,9 @@ public class Student {
         this.level = level;
         this.recordId = recordId;
     }
+    
+    public String toString() {
+    	return (studentId + " " + studentName + " " + major + " " + level + " " 
+    			+ age + " " + recordId);
+    }
 }

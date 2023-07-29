@@ -1,3 +1,9 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -18,6 +24,9 @@ class BTree {
      * Number of key-value pairs allowed in the tree/the minimum degree of B+Tree
      **/
     private int t;
+    
+    // field to track the csv DB of the tree
+    public String dbPath = "src\\Student.csv";
 
     BTree(int t) {
         this.root = null;
@@ -38,11 +47,10 @@ class BTree {
         		return leafNode.values[i];
         	}
         }
-
         return -1;
     }
 
-    public BTreeNode treeSearch(BTreeNode parent, long key) {
+    public BTreeNode treeSearch(BTreeNode parent, long searchKey) {
         // Base - parent is leaf
         if(parent.leaf) {
             return parent;
@@ -50,12 +58,12 @@ class BTree {
 
         for (int i = 0; i < parent.n; i++) {
             long nodeKey = parent.keys[i];
-            if (nodeKey < key) {
-                return treeSearch(parent.children[i], key);
+            if (searchKey < nodeKey) {
+                return treeSearch(parent.children[i], searchKey);
             }
 
             if (i == (parent.keys.length - 1)) {
-                return treeSearch(parent.children[i+1], key);
+                return treeSearch(parent.children[i+1], searchKey);
             }
         }
 
@@ -63,6 +71,10 @@ class BTree {
     }
 
     BTree insert(Student student) {
+    	return insert(student, false);
+    }
+    
+    BTree insert(Student student, boolean addCSV) {
         /**
          * TODO:
          * Implement this function to insert in the B+Tree.
@@ -76,17 +88,52 @@ class BTree {
     		this.root = new BTreeNode(this.t, true);
     	}
     	
-    	// Get the student id and record id and insert recursively
+    	// Get the student id and record id and insert recursively into BTree
     	long studentId = student.studentId;
     	long recordId = student.recordId;
     	BTreeEntry studentEntry = new BTreeEntry(student.studentId, student.recordId);
     	BTreeEntry newEntry = new BTreeEntry();
     	
     	this.treeInsert(this.root, studentEntry, newEntry);
-    	
     	if (Helpers.debug) { this.treeDebugPrint(); }
     	
+    	// Add the student ID to the Students.csv file and remove blank lines
+    	if (addCSV) {
+    		String newStudentLine = newStudentCsvLine(student);
+    		addStudentLineToCsv(newStudentLine);
+    		deleteCsvLine(-1);
+    	}
+    	
         return this;
+    }
+    
+    private void addStudentLineToCsv(String newLine) {
+    	File csvFile = new File(dbPath);
+    	try {
+    		FileWriter fw = new FileWriter(csvFile, true);
+    		fw.write("\n");
+    		fw.write(newLine);
+    		fw.close();	
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+    }
+    
+    private String newStudentCsvLine(Student s) {
+    	StringBuilder str = new StringBuilder();
+    	str.append(s.studentId);
+    	str.append(",");
+    	str.append(s.studentName);
+    	str.append(",");
+    	str.append(s.major);
+    	str.append(",");
+    	str.append(s.level);
+    	str.append(",");
+    	str.append(s.age);
+    	str.append(",");
+    	str.append(s.recordId);
+    	
+    	return str.toString();
     }
     
     void treeInsert(BTreeNode node, BTreeEntry entry, BTreeEntry newEntry) {
@@ -418,7 +465,59 @@ class BTree {
     	if (Helpers.debug) { this.treeDebugPrint(); }
     	
     	// TODO - Do csv edits here
+    	deleteCsvLine(studentId);
+    	
     	return true;
+    }
+    
+    void deleteCsvLine(long delStudId) {
+    	File srcFile = new File(dbPath);
+    	String tempPath = "src\\temp.txt";
+    	File newFile = new File(tempPath);
+    	
+    	String line;
+    	
+    	try {
+			// Setup IO for new files
+    		FileWriter newFw = new FileWriter(tempPath, true);
+			BufferedWriter newBw = new BufferedWriter(newFw);
+			PrintWriter newPw = new PrintWriter(newBw);
+			
+			// Setup IO to read in old, source csv file
+			FileReader srcFr = new FileReader(dbPath);
+			BufferedReader srcBr = new BufferedReader(srcFr);
+			
+			// Increment line in srcFile
+			while ((line = srcBr.readLine()) != null) {
+				//
+				long studentID = -2;
+				String[] lineVals = line.split(",", 6);
+				try {
+					studentID = Long.parseLong(lineVals[0].trim());
+				}catch (NumberFormatException e) {
+					Helpers.p("Remove blank line from csv file.");				
+				}
+				
+				
+				if (studentID != delStudId && studentID != -2) {
+					newPw.println(line);
+				}
+			}
+			newPw.flush();
+			newPw.close();
+			newFw.close();
+			srcBr.close();
+			newBw.close();
+			newFw.close();
+			
+			srcFile.delete();
+			File swap = new File(dbPath);
+			newFile.renameTo(swap);
+			
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
     }
     
     void treeDelete(BTreeNode parent, BTreeNode node, BTreeEntry entry,
