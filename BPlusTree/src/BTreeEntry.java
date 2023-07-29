@@ -21,5 +21,10 @@ public class BTreeEntry {
 		this.node = null;
 	}
 	
+	public BTreeEntry(long key) {
+		this.key = key;
+		this.node = null;
+	}
+	
 	public BTreeEntry() {}
 }
