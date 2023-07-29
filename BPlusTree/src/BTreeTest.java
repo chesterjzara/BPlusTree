@@ -1,9 +1,11 @@
+import java.util.List;
 
 public class BTreeTest {
 
 	public static void main(String[] args) {
 		Helpers.debug = true;
-		Helpers.p("Test debug");
+		Helpers.p("Debug printing enabled!");
+		Helpers.p("");
 		
 //		BTree testTree = new BTree(2);
 //		Student stud1 = new Student(2, 12, "CJ", "Math", "SR", 111);
@@ -109,53 +111,39 @@ public class BTreeTest {
 	
 	public static void testRemoveParentKeyAndChild() {
 		BTree tree = new BTree(2);
-		tree.insert(new Student(22, 12, "cj", "CS", "SR", 110));
-		tree.treeDebugPrint();
-		tree.insert(new Student(24, 12, "cj", "CS", "SR", 110));
-		tree.treeDebugPrint();
-		tree.insert(new Student(27, 12, "cj", "CS", "SR", 110));
-		tree.treeDebugPrint();
-		tree.insert(new Student(29, 12, "cj", "CS", "SR", 110));
-		tree.treeDebugPrint();
-		tree.insert(new Student(25, 12, "cj", "CS", "SR", 110));
-		tree.treeDebugPrint();
+		tree.insert(new Student(22, 12, "cj", "CS", "SR", 22));
+		tree.insert(new Student(24, 12, "cj", "CS", "SR", 24));
+		tree.insert(new Student(27, 12, "cj", "CS", "SR", 27));
+		tree.insert(new Student(29, 12, "cj", "CS", "SR", 29));
+		tree.insert(new Student(25, 12, "cj", "CS", "SR", 25));
 		tree.delete(24);
-		tree.treeDebugPrint();
-		tree.insert(new Student(30, 12, "cj", "CS", "SR", 110));
-		tree.treeDebugPrint();
-		tree.insert(new Student(26, 12, "cj", "CS", "SR", 110));
-		tree.treeDebugPrint();
+		tree.insert(new Student(30, 12, "cj", "CS", "SR", 30));
+		tree.insert(new Student(26, 12, "cj", "CS", "SR", 26));
 		tree.delete(30);
-		tree.treeDebugPrint();
 		tree.delete(27);
-		tree.treeDebugPrint();
-		tree.insert(new Student(32, 12, "cj", "CS", "SR", 110));
-		tree.treeDebugPrint();
-		tree.insert(new Student(34, 12, "cj", "CS", "SR", 110));
-		tree.treeDebugPrint();
-		tree.insert(new Student(40, 12, "cj", "CS", "SR", 110));
-		tree.treeDebugPrint();
-		tree.insert(new Student(50, 12, "cj", "CS", "SR", 110));
-		tree.treeDebugPrint();
-		tree.insert(new Student(60, 12, "cj", "CS", "SR", 110));
-		tree.treeDebugPrint();
-		tree.insert(new Student(70, 12, "cj", "CS", "SR", 110));
-		tree.treeDebugPrint();
-		tree.insert(new Student(55, 12, "cj", "CS", "SR", 110));
-		tree.treeDebugPrint();
-		tree.insert(new Student(54, 12, "cj", "CS", "SR", 110));
-		tree.treeDebugPrint();
-		tree.insert(new Student(56, 12, "cj", "CS", "SR", 110));
-		tree.treeDebugPrint();
-		tree.insert(new Student(57, 12, "cj", "CS", "SR", 110));
-		tree.treeDebugPrint();
-		tree.insert(new Student(65, 12, "cj", "CS", "SR", 110));
-		tree.treeDebugPrint();
-		tree.insert(new Student(80, 12, "cj", "CS", "SR", 110));
-		tree.treeDebugPrint();
+		tree.insert(new Student(32, 12, "cj", "CS", "SR", 32));
+		tree.insert(new Student(34, 12, "cj", "CS", "SR", 34));
+		tree.insert(new Student(40, 12, "cj", "CS", "SR", 40));
+		tree.insert(new Student(50, 12, "cj", "CS", "SR", 50));
+		tree.insert(new Student(60, 12, "cj", "CS", "SR", 60));
+		tree.insert(new Student(70, 12, "cj", "CS", "SR", 70));
+		tree.insert(new Student(55, 12, "cj", "CS", "SR", 55));
+		tree.insert(new Student(54, 12, "cj", "CS", "SR", 54));
+		tree.insert(new Student(56, 12, "cj", "CS", "SR", 56));
+		tree.insert(new Student(57, 12, "cj", "CS", "SR", 57));
+		tree.insert(new Student(65, 12, "cj", "CS", "SR", 65));
+		tree.insert(new Student(80, 12, "cj", "CS", "SR", 80));
 		tree.delete(22);
-		tree.treeDebugPrint();
+		tree.delete(57);
+		tree.delete(70);
+		tree.insert(new Student(42, 12, "cj", "CS", "SR", 42));
+		tree.insert(new Student(43, 12, "cj", "CS", "SR", 43));
+		tree.delete(54);
 		
-
+		List<Long> listOfRecordID = tree.print();
+		for (Long recID : listOfRecordID) {
+			System.out.print(recID + " >> ");
+		}
+		
 	}
 }

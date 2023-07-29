@@ -45,12 +45,43 @@ class BTreeNode {
         this.values = new long[2 * t];
     }
     
-    void nodeDebugPrint() {
+    void nodeDebugPrint(boolean integrityCheck) {
+    	nodeDebugPrint(integrityCheck, false);
+    }
+    
+    void nodeDebugPrint(boolean integrityCheck, boolean showValues) {
+    	int nonZeroCnt = 0;
     	System.out.print("[");
     	for (int i = 0; i < keys.length; i++) {
-    		System.out.print("(" + keys[i] +"," + values[i] + ")");
-//    		System.out.print("(" + keys[i] +"," + values[i] +"," + this.next.keys + ")");
+    		if (showValues) {
+    			System.out.print("(" + keys[i] +"," + values[i] + ")");
+    		} else {
+    			System.out.print("(" + keys[i] + ")");
+    		}
+    		
+    		if (keys[i] > 0) { nonZeroCnt++; }
     	}
-    	System.out.print("] ");
+    	String nOut = this.n != nonZeroCnt ? "!" : "";
+    	System.out.print(" (n=" + this.n + nOut + ")] ");
+    }
+    
+    int numChildren() {
+    	int numChildren = 0;
+    	for (int j = 0 ;j < this.children.length; j++) {
+    		if (children[j] != null) {
+    			numChildren += 1;
+    		}
+    	}
+    	return numChildren;
+    }
+    
+    int numKeys() {
+    	int numKeys = 0;
+    	for (int j = 0 ;j < this.keys.length; j++) {
+    		if (keys[j] != 0) {
+    			numKeys += 1;
+    		}
+    	}
+    	return numKeys;
     }
 }
