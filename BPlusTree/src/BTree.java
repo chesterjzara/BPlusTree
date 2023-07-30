@@ -46,7 +46,7 @@ class BTree {
      */
     long search(long studentId) {
         /**
-         * TODO:
+         * :
          * Implement this function to search in the B+Tree.
          * Return recordID for the given StudentID.
          * Otherwise, print out a message that the given studentId has not been found in the table and return -1.
@@ -120,7 +120,7 @@ class BTree {
      */
     BTree insert(Student student, boolean addCSV) {
         /**
-         * TODO:
+         * DONE:
          * Implement this function to insert in the B+Tree.
          * Also, insert in student.csv after inserting in B+Tree.
          */
@@ -560,7 +560,7 @@ class BTree {
      */
     boolean delete(long studentId) {
         /**
-         * TODO:
+         * DONE:
          * Implement this function to delete in the B+Tree.
          * Also, delete in student.csv after deleting in B+Tree, if it exists.
          * Return true if the student is deleted successfully otherwise, return false.
@@ -1228,7 +1228,7 @@ class BTree {
         List<Long> listOfRecordID = new ArrayList<>();
 
         /**
-         * TODO:
+         * DONE:
          * Implement this function to print the B+Tree.
          * Return a list of recordIDs from left to right of leaf nodes.
          *
