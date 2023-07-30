@@ -18,7 +18,7 @@ public class BTreeMain {
 
     public static void main(String[] args) {
     	// TODO - variable to print debugging info - set to false for final version
-    	Helpers.debug = false;
+    	Helpers.debug = true;
     	HashSet<Long> pastRandom =  new HashSet<Long>();
 
     	
@@ -60,7 +60,7 @@ public class BTreeMain {
                             String major = s2.next();
                             String level = s2.next();
                             int age = Integer.parseInt(s2.next());
-                            /** TODO: Write a logic to generate recordID*/
+                            /** DONE: Write a logic to generate recordID*/
                             // Need to parse the recordID from the input file to 
                             	//avoid throwing off the count
                             long recordID = Long.parseLong(s2.next());
@@ -116,7 +116,7 @@ public class BTreeMain {
 
     private static List<Student> getStudents() {
 
-        /** TODO:
+        /** DONE:
          * Extract the students information from "Students.csv"
          * return the list<Students>
          */

@@ -14,6 +14,10 @@ import java.util.List;
  * Key - StudentId
  * Leaf Node should contain [ key,recordId ]
  */
+/**
+ * @author chest
+ *
+ */
 class BTree {
 
     /**
@@ -33,14 +37,25 @@ class BTree {
         this.t = t;
     }
 
+    /**
+     * Search the B+Tree recursively to find the node with the input studentId,
+     * then check the keys in that node to find the corresponding recordId value.
+     * 
+     * @param studentId - key to search on
+     * @return recordID for the student found or -1 if none found
+     */
     long search(long studentId) {
         /**
-         * TODO:
+         * :
          * Implement this function to search in the B+Tree.
          * Return recordID for the given StudentID.
          * Otherwise, print out a message that the given studentId has not been found in the table and return -1.
          */
         BTreeNode leafNode = treeSearch(root, studentId);
+        
+        if (leafNode == null) {
+        	return -1;
+        }
         
         for (int i = 0; i < leafNode.keys.length; i++) {
         	if (leafNode.keys[i] == studentId) {
@@ -50,33 +65,62 @@ class BTree {
         return -1;
     }
 
+    /**
+     * Recursive B+Tree search to find the node with the searchKey input, if the
+     * parent node is a leaf, return
+     * 
+     * @param parent - previous parent node to search
+     * @param searchKey - 
+     * @return BTreeNode containing the search key
+     */
     public BTreeNode treeSearch(BTreeNode parent, long searchKey) {
-        // Base - parent is leaf
+        // Base case - parent is leaf
         if(parent.leaf) {
             return parent;
         }
-
+        
+        // Recursive case - check child leaf based on key 
         for (int i = 0; i < parent.n; i++) {
             long nodeKey = parent.keys[i];
             if (searchKey < nodeKey) {
                 return treeSearch(parent.children[i], searchKey);
             }
 
-            if (i == (parent.keys.length - 1)) {
+            if (i == (parent.n - 1)) {
                 return treeSearch(parent.children[i+1], searchKey);
             }
         }
-
         return null;
     }
 
+    /**
+     * Insert the Student into the B+Tree, do NOT a line to the Student.csv file.
+     * Use a recursive search to find the correct node to insert the key-value 
+     * and make B=Tree balancing corrections.
+     * 
+     * This is used for reading in the CSV lines already in the CSV file. 
+     * 
+     * @param student - to insert key-value for studentId-recordId
+     * @return 
+     */
     BTree insert(Student student) {
     	return insert(student, false);
     }
     
+    /**
+     * Insert the Student into the B+Tree and add a line to the Student.csv file.
+     * Call a recursive search to find the correct node to insert the key-value 
+     * and make B=Tree balancing corrections.
+     * 
+     * This is used for new lines that need to be added to the CSV file.
+     * 
+     * @param student - to insert key-value for studentId-recordId
+     * @param addCSV - boolean to determine if this student is added to the CSV
+     * @return 
+     */
     BTree insert(Student student, boolean addCSV) {
         /**
-         * TODO:
+         * DONE:
          * Implement this function to insert in the B+Tree.
          * Also, insert in student.csv after inserting in B+Tree.
          */
@@ -97,16 +141,20 @@ class BTree {
     	this.treeInsert(this.root, studentEntry, newEntry);
     	if (Helpers.debug) { this.treeDebugPrint(); }
     	
-    	// Add the student ID to the Students.csv file and remove blank lines
+    	// Add the student ID to the Students.csv file and removes blank lines
     	if (addCSV) {
     		String newStudentLine = newStudentCsvLine(student);
     		addStudentLineToCsv(newStudentLine);
     		deleteCsvLine(-1);
     	}
-    	
         return this;
     }
     
+    /**
+     * Updates the CSV file with a line for a new student insertion
+     * 
+     * @param newLine - String to insert for a given Student
+     */
     private void addStudentLineToCsv(String newLine) {
     	File csvFile = new File(dbPath);
     	try {
@@ -119,6 +167,12 @@ class BTree {
     	}
     }
     
+    /**
+     * Generate a new string line for an input student to be added to the CSV file 
+     * 
+     * @param s - student s to insert into CSV
+     * @return string to insert into CSV for a student s
+     */
     private String newStudentCsvLine(Student s) {
     	StringBuilder str = new StringBuilder();
     	str.append(s.studentId);
@@ -136,6 +190,16 @@ class BTree {
     	return str.toString();
     }
     
+    /**
+     * Recursive function to insert new Student info and do B+Tree balancing updates.
+     * This has separate cases for leaf and node insertion and splits needed to 
+     * maintain balance. 
+     * 
+     * @param node - current node level being updated
+     * @param entry - BTreeEntry object with new values to insert
+     * @param newEntry - BTreeEntry object of new split child to be accounted 
+     *                   for in parent node via recursive calls
+     */
     void treeInsert(BTreeNode node, BTreeEntry entry, BTreeEntry newEntry) {
     	// Non-Leaf Case
     	if (!node.leaf) {
@@ -264,10 +328,19 @@ class BTree {
     	}
     }
     
+    /**
+     * Inserts a new key and child into an internal node with space when its 
+     * child node has been split from an insert. 
+     * 
+     * @param node - current node to insert key into
+     * @param newEntry - BTreeEntry with new key to insert into current node
+     * @param childTarget - index of the child to update
+     */
     void insertNodeWithSpace(BTreeNode node, BTreeEntry newEntry, int childTarget) {
     	int keyInsPos = findInsertPosition(node, newEntry);
 		long[] newKeys = new long[node.keys.length];
 		
+		// Update keys in node with previous keys + new key
 		for (int j = 0; j < newKeys.length; j++) {
     		if (j < keyInsPos) {
     			newKeys[j] = node.keys[j];
@@ -281,7 +354,7 @@ class BTree {
     	}
 		node.n += 1;
 		
-		// Insert children pointer in order
+		// Insert new children pointer in order
 		BTreeNode[] tempChildren = new BTreeNode[node.children.length];
 		int newChildIdx = childTarget + 1;
 		
@@ -297,10 +370,20 @@ class BTree {
     		}
     	}
 		
+		// Save back new keys and children arrays to the node
 		node.keys = newKeys;
 		node.children = tempChildren;
     }
     
+    /**
+     * Handle an insertion into an inner node where there is no space and it must
+     * be split. 
+     * 
+     * @param nodeOne - original node being split
+     * @param nodeTwo - new node created to split keys+children into
+     * @param newEntry - new key/child added to inner node 
+     * @param childIdx - index for the new key/child to insert
+     */
     void splitInsertNode(BTreeNode nodeOne, BTreeNode nodeTwo, BTreeEntry newEntry, int childIdx) {
     	int degree = nodeOne.t;
     	
@@ -360,6 +443,14 @@ class BTree {
     	}
     }
     
+    /**
+     * Handle insert into a leaf node with a split. Sorts and organizes the existing
+     * keys and values into the two new nodes.
+     * 
+     * @param leafOne - original split leaf node
+     * @param leafTwo - new split leaf node
+     * @param entry - key/value to be inserted into both leaf nodes
+     */
     void splitInsertLeaf(BTreeNode leafOne, BTreeNode leafTwo, BTreeEntry entry) {
     	int degree = leafOne.t;
     	int insertPos = findInsertPosition(leafOne, entry);
@@ -405,6 +496,13 @@ class BTree {
     	}
     }
     
+    /**
+     * Find the index to insert an input key into the key array of the input node
+     * 
+     * @param node - BTreeNode to be updated  
+     * @param entry - BTreeEntry containing key to add
+     * @return - an integer value representing where the key should be inserted
+     */
     int findInsertPosition(BTreeNode node, BTreeEntry entry) {
     	int insertPos = -1;
     	// Find insert position
@@ -421,7 +519,12 @@ class BTree {
     	return insertPos;
     }
     
-    // Create new arrays and insert old + new keys + values
+    /**
+     * Handles insert into leaf by coping old/new keys and values in sorted order.
+     * 
+     * @param node - node with keys and values to copy
+     * @param entry - new key/value to insert
+     */
     void arrayInsertLeaf(BTreeNode node, BTreeEntry entry) {
     	int insIdx = findInsertPosition(node, entry);
     	
@@ -447,29 +550,52 @@ class BTree {
     	node.n += 1;
     }
     
+    /**
+     * Deletes a student value in the B+Tree and CSV file based on an input
+     * student id. Calls a recursive method to handle the B+Tree updates and any
+     * necessary tree balancing.
+     * 
+     * @param studentId - input lookup value for key in tree and CSV
+     * @return - boolean to show if the value was deleted or not
+     */
     boolean delete(long studentId) {
         /**
-         * TODO:
+         * DONE:
          * Implement this function to delete in the B+Tree.
          * Also, delete in student.csv after deleting in B+Tree, if it exists.
          * Return true if the student is deleted successfully otherwise, return false.
          */
-    	Helpers.p("-- Deleting " + studentId + " --");
     	
+    	// Check if the studentId exists to be deleted - return false if not
+    	if (search(studentId) == -1) {
+    		return false;
+    	}
+    	
+    	// Setup BTreeEntry objects and call recursive delete 
+    	Helpers.p("-- Deleting " + studentId + " --");
     	BTreeEntry studentEntry = new BTreeEntry();
     	studentEntry.key = studentId;
     	BTreeEntry oldChildEntry = new BTreeEntry();
     	
     	treeDelete(null, root, studentEntry, oldChildEntry);
-    	
     	if (Helpers.debug) { this.treeDebugPrint(); }
     	
-    	// TODO - Do csv edits here
+    	// Edit CSV file to delete the student line
     	deleteCsvLine(studentId);
     	
     	return true;
     }
     
+    /**
+     * Delete a line for a given student ID within the Student.csv file. Done by
+     * reading and writing a new Student.csv file with the matching student line
+     * excluded.
+     * 
+     * Note - if the first value in a line in the CSV cannot be parsed to a long,
+     * delete that line. This can remove blank or corrupted lines.
+     * 
+     * @param delStudId - studentId to search and remove.
+     */
     void deleteCsvLine(long delStudId) {
     	File srcFile = new File(dbPath);
     	String tempPath = "src\\temp.txt";
@@ -503,6 +629,8 @@ class BTree {
 					newPw.println(line);
 				}
 			}
+			
+			// Flush and close all reading and writing objects
 			newPw.flush();
 			newPw.close();
 			newFw.close();
@@ -510,16 +638,26 @@ class BTree {
 			newBw.close();
 			newFw.close();
 			
+			// Delete the original file and rename the temp file to Student.csv
 			srcFile.delete();
 			File swap = new File(dbPath);
 			newFile.renameTo(swap);
 			
 		} catch (Exception e) {
-			// TODO: handle exception
 			e.printStackTrace();
 		}
     }
     
+    /**
+     * Recursive delete function that deletes the input student info and re-balances
+     * the B+Tree in the leaves and nodes.  
+     * 
+     * @param parent - parent of the current node
+     * @param node - current node to update
+     * @param entry - info of student key/values to delete
+     * @param oldChildEntry - if a child node was merged, pass back for 
+     *                        recursive re-balancing
+     */
     void treeDelete(BTreeNode parent, BTreeNode node, BTreeEntry entry,
     		BTreeEntry oldChildEntry) {
     	int minKeys = node.keys.length / 2;
@@ -731,6 +869,14 @@ class BTree {
     	}
     }
     
+    /**
+     * Helper function for the Delete Node Merge case where the splitting key 
+     * from the parent is "pulled" down to the left node.  
+     * 
+     * @param parent - parent node that will have its key moved down to the new merge node
+     * @param left - the left node that will be merged into
+     * @param right - the right node - needed to find the appropriate child index in parent
+     */
     void pullParentSplitKey(BTreeNode parent, BTreeNode left, BTreeNode right) {
     	int parentSplitChildIdx = findParentKeyForNode(parent, right);
     	int parentSplitKeyIdx = parentSplitChildIdx - 1;
@@ -764,6 +910,15 @@ class BTree {
     	}
     }
     
+    
+    /**
+     * Helper function to merge the left and right child node keys and children
+     * in an internal node Deletion redistribution 
+     * 
+     * @param parent
+     * @param left
+     * @param right
+     */
     void redistNodes(BTreeNode parent, BTreeNode left, BTreeNode right) {
     	int totalKeys = left.n + right.n + 1;
     	int totalChildren = totalKeys + 2;
@@ -776,16 +931,16 @@ class BTree {
 		System.arraycopy(left.children, 0, tempChildren, 0, left.n + 1);
 		System.arraycopy(right.children, 0, tempChildren, left.n + 1, right.n + 1);
 		
-		
+		// New Temp Key and child arrays and reset counters
 		long[] newLeftKeys = new long[left.keys.length];
 		long[] newRightKeys = new long[right.keys.length];
+		BTreeNode[] newLeftChildren = new BTreeNode[left.children.length];
+		BTreeNode[] newRightChildren = new BTreeNode[right.children.length];
 		left.n = 0;
 		right.n = 0;
 		int rightCnt = 0;
 		int rightChildCnt = 0;
 		
-		BTreeNode[] newLeftChildren = new BTreeNode[left.children.length];
-		BTreeNode[] newRightChildren = new BTreeNode[right.children.length];
 		
 		// Redistribute the keys into each node - left and right
 		for (int i = 0; i < totalKeys; i++) {
@@ -822,6 +977,13 @@ class BTree {
 		right.children = newRightChildren;
     }
     
+    /**
+     * Removes a key and related child node from the input parent. This is done
+     * in an inner node when the node's child has lost a node from a deletion.
+     * 
+     * @param parent
+     * @param removeIdx
+     */
     void removeParentKeyAndChild(BTreeNode parent, int removeIdx) {
     	long[] tempKeys = new long[parent.keys.length];
     	BTreeNode[] tempChildren = new BTreeNode[parent.children.length];
@@ -840,6 +1002,13 @@ class BTree {
 		parent.n -= 1;
     }
     
+    /**
+     * Merge the keys and values from a merge node into a target node - for leaf
+     * node deletion that requires merging leaf nodes (no extra entries on siblings).
+     * 
+     * @param targetNode
+     * @param mergeNode
+     */
     void mergeKeysToLeftLeaf(BTreeNode targetNode, BTreeNode mergeNode) {
     	// Create new temp arrays for combined keys and values 
     	long[] tempKeys = new long[targetNode.keys.length];
@@ -856,6 +1025,13 @@ class BTree {
 		targetNode.values = tempValues;
     }
     
+    /**
+     * Merge key and children from merge node into target node - for internal node
+     * deletion that requires merging internal nodes (no extra entries on sibs)
+     * 
+     * @param targetNode
+     * @param mergeNode
+     */
     void mergeKeysAndChildrenToLeftNode(BTreeNode targetNode, BTreeNode mergeNode) {
     	// Create new temp arrays for combined keys and values 
     	long[] tempKeys = new long[targetNode.keys.length];
@@ -876,6 +1052,15 @@ class BTree {
     }
     
     
+    /**
+     * Finds the key matching the input node in the input parent node
+     * Used in several places to make sure we are removing the correct key or child
+     * from a parent. 
+     * 
+     * @param parent
+     * @param node
+     * @return
+     */
     int findParentKeyForNode(BTreeNode parent, BTreeNode node) {
     	int idx = -1;
     	if (parent == null || node == null) {
@@ -890,6 +1075,14 @@ class BTree {
     }
     
     
+    /**
+     * Redistributes the key+values in a leaf node with an input sibNode.
+     * Used for leaf deletion where sibilings have extra entries.
+     * 
+     * @param node
+     * @param sibNode
+     * @param right
+     */
     void redistLeaves(BTreeNode node, BTreeNode sibNode, boolean right) {
     	// Create new temp arrays for combined keys and values before redist
     	int totalKeys = node.n + sibNode.n;
@@ -942,6 +1135,13 @@ class BTree {
 		rightNode.values = newRightValues;
     }
 
+    /**
+     * Finds the right sibling of a given node basedo on the provided parent node
+     * 
+     * @param parent
+     * @param node
+     * @return BTreeNode that is the right sibling of the input node
+     */
     BTreeNode findRightSibling(BTreeNode parent, BTreeNode node) {
     	if (parent == null) return null;
     	
@@ -962,7 +1162,13 @@ class BTree {
     	return null;
     }
     
-    
+    /**
+     * Finds the left sibling of a given node based on the provided parent node
+     * 
+     * @param parent
+     * @param node
+     * @return BTreeNode that is the left sibling of the input node
+     */    
     BTreeNode findLeftSibling(BTreeNode parent, BTreeNode node) {
     	if (parent == null) return null;
     	
@@ -984,6 +1190,12 @@ class BTree {
     }
     
     
+    /**
+     * Deletes the key+value from the entry in the input node
+     * 
+     * @param node
+     * @param entry
+     */
     void arrayLeafDelete(BTreeNode node, BTreeEntry entry) {
     	// Find Delete Index
     	int delIdx = Arrays.binarySearch(node.keys, entry.key);
@@ -1005,12 +1217,18 @@ class BTree {
     	node.values = newValues;
     }
 
+    /**
+     * Recursively traverse the tree and print out the recordIDs (values) of the 
+     * leaf nodes.
+     * 
+     * @return ArrayList of longs representing recordIDs in the tree
+     */
     List<Long> print() {
 
         List<Long> listOfRecordID = new ArrayList<>();
 
         /**
-         * TODO:
+         * DONE:
          * Implement this function to print the B+Tree.
          * Return a list of recordIDs from left to right of leaf nodes.
          *
@@ -1020,8 +1238,12 @@ class BTree {
         return listOfRecordID;
     }
     
-    
-    
+    /**
+     * Recursive method to traverse the B+Tree and add each recordID to the arraylist
+     * 
+     * @param node
+     * @param listOfRecordID
+     */
     void recursivePrint(BTreeNode node, List<Long> listOfRecordID) {
     	if (node == null) return;
     	
@@ -1035,8 +1257,10 @@ class BTree {
     	}
     }
     
-    
-    
+    /**
+     * Troubleshooting method to print the tree at any given point. Outputs:
+     * [(key0)(key1)(key2)(n=3)] for each level of the tree
+     */
     void treeDebugPrint() {
     	
     	ArrayList<ArrayList<BTreeNode>>	outTree = new ArrayList<ArrayList<BTreeNode>>();
@@ -1055,6 +1279,14 @@ class BTree {
     	System.out.println(); // Extra line for spacing
     }    
     
+    /**
+     * In order recursive traversal of the tree that saves the results back to
+     * the outTree array list.
+     * 
+     * @param outTree
+     * @param node
+     * @param level
+     */
     void recursiveDebugPrint(ArrayList<ArrayList<BTreeNode>> outTree, BTreeNode node, int level) {
     	if (node == null)  return;
     	
@@ -1070,8 +1302,6 @@ class BTree {
     	for (int i = 0; i < node.children.length; i++) {
     		recursiveDebugPrint(outTree, node.children[i], level + 1);
     	}
-    	
-    	
     }
 
 }
