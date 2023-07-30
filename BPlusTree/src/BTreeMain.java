@@ -67,9 +67,9 @@ public class BTreeMain {
                             
                             // Get a random recordID and check it is unused
                             Random r = new Random();
-                            recordID = r.nextLong(studentsDB.size(),100);
+                            recordID = r.nextLong(studentsDB.size(),Long.MAX_VALUE);
                             while (pastRandom.contains(recordID)) {
-                            	recordID = r.nextLong(studentsDB.size(),100);
+                            	recordID = r.nextLong(studentsDB.size(),Long.MAX_VALUE);
                             }
                             pastRandom.add(recordID);
                             
