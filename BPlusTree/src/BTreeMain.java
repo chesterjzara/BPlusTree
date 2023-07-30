@@ -17,8 +17,8 @@ import java.util.Random;
 public class BTreeMain {
 
     public static void main(String[] args) {
-    	// TODO - variable to print debugging info - set to false for final version
-    	Helpers.debug = true;
+    	// DONE - variable to print debugging info - set to false for final version
+    	Helpers.debug = false;
     	HashSet<Long> pastRandom =  new HashSet<Long>();
 
     	

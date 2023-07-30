@@ -1,4 +1,11 @@
 
+/**
+ * BTreeEntry class created to track either new key-value entries or nodes
+ * created/deleted during tree balancing operations.
+ * 
+ * @author chest
+ *
+ */
 public class BTreeEntry {
 	long key;
 	long value;
