@@ -4,3 +4,11 @@ delete 115987938
 search 320874982
 search 455798411
 insert 321114982 Michael Scott Management RR 21 25
+insert 578875479 Chester Zara Biochemistry FR 30 26
+insert 578875480 Chester Zara2 Biochemistry FR 31 27
+insert 578875481 Chester Zara3 Biochemistry FR 32 28
+insert 578875482 Chester Zara4 Biochemistry FR 33 29
+delete 578875478
+delete 348121549
+delete 132977562
+delete 578875481
